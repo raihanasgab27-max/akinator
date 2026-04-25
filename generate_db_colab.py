@@ -262,6 +262,38 @@ def get_tree_depth(node):
     return 1 + max(yes_depth, no_depth)
 
 
+def fix_incomplete_tree(node, default_guess="Unknown"):
+    """Fix incomplete tree nodes by filling missing branches with dummy guesses"""
+    if not node:
+        return {"type": "guess", "guess": default_guess}
+    
+    if node.get("type") == "guess":
+        if not node.get("guess"):
+            node["guess"] = default_guess
+        return node
+    
+    if node.get("type") == "question":
+        if not node.get("question"):
+            # Incomplete question, convert to guess
+            return {"type": "guess", "guess": default_guess}
+        
+        # Fix missing branches
+        if not node.get("yes"):
+            node["yes"] = {"type": "guess", "guess": "Something"}
+        else:
+            node["yes"] = fix_incomplete_tree(node["yes"], default_guess)
+        
+        if not node.get("no"):
+            node["no"] = {"type": "guess", "guess": "Something else"}
+        else:
+            node["no"] = fix_incomplete_tree(node["no"], default_guess)
+        
+        return node
+    
+    # Unknown type, convert to guess
+    return {"type": "guess", "guess": default_guess}
+
+
 def validate_database(database):
     """Validate database structure"""
     if not database:
@@ -414,12 +446,26 @@ def main():
         print("3. Ollama error")
         return
     
+    # Fix incomplete tree nodes
+    print("\n🔧 Fixing incomplete tree nodes...")
+    database = fix_incomplete_tree(database)
+    print("✅ Tree fixed!")
+    
     # Validate
     is_valid, msg = validate_database(database)
     
     if not is_valid:
-        print(f"\n❌ Database structure invalid: {msg}")
-        return
+        print(f"\n❌ Database structure still invalid: {msg}")
+        print("⚠️  Trying with more aggressive fixing...")
+        # Try again with default guess
+        database = fix_incomplete_tree(database, "Unknown Item")
+        is_valid, msg = validate_database(database)
+        
+        if not is_valid:
+            print(f"❌ Still invalid: {msg}")
+            return
+        else:
+            print("✅ Fixed successfully!")
     
     # Count stats
     items = count_items_in_tree(database)

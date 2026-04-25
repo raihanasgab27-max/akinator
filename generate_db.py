@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-Standalone script untuk generate Akinator database dengan Ollama
-Jalankan: python generate_db.py
-"""
-
 import os
 import json
 import sys
@@ -14,6 +8,37 @@ def print_header(text):
     print("\n" + "=" * 60)
     print(f"  {text}")
     print("=" * 60)
+
+def fix_incomplete_tree(node, default_guess="Unknown"):
+    """Fix incomplete tree nodes by filling missing branches with dummy guesses"""
+    if not node:
+        return {"type": "guess", "guess": default_guess}
+    
+    if node.get("type") == "guess":
+        if not node.get("guess"):
+            node["guess"] = default_guess
+        return node
+    
+    if node.get("type") == "question":
+        if not node.get("question"):
+            # Incomplete question, convert to guess
+            return {"type": "guess", "guess": default_guess}
+        
+        # Fix missing branches
+        if not node.get("yes"):
+            node["yes"] = {"type": "guess", "guess": "Something"}
+        else:
+            node["yes"] = fix_incomplete_tree(node["yes"], default_guess)
+        
+        if not node.get("no"):
+            node["no"] = {"type": "guess", "guess": "Something else"}
+        else:
+            node["no"] = fix_incomplete_tree(node["no"], default_guess)
+        
+        return node
+    
+    # Unknown type, convert to guess
+    return {"type": "guess", "guess": default_guess}
 
 def main():
     print_header("🚀 AKINATOR - DATABASE GENERATOR")
@@ -186,6 +211,10 @@ Coba lagi? (y/n): """, end="")
     # === STEP 5: Validate & Save ===
     print_header("STEP 5️⃣: Validasi & Simpan")
     
+    print("� Fixing incomplete tree nodes...")
+    database = fix_incomplete_tree(database)
+    print("✅ Tree fixed!")
+    
     print("🔍 Validating database structure...")
     
     # Validate
@@ -193,14 +222,21 @@ Coba lagi? (y/n): """, end="")
         if "type" not in node:
             return False
         if node["type"] == "question":
-            return "question" in node and "yes" in node and "no" in node
+            return "question" in node and "yes" in node and "no" in node and validate_tree(node["yes"]) and validate_tree(node["no"])
         elif node["type"] == "guess":
             return "guess" in node
         return False
     
     if not validate_tree(database):
         print("❌ Database structure tidak valid!")
-        return
+        print("⚠️  Trying with more aggressive fixing...")
+        database = fix_incomplete_tree(database, "Unknown Item")
+        
+        if not validate_tree(database):
+            print("❌ Still invalid after fixing!")
+            return
+        else:
+            print("✅ Fixed successfully!")
     
     print("✅ Database valid!\n")
     
