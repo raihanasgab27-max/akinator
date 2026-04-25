@@ -65,13 +65,15 @@ class OllamaIntegration:
         except:
             return None
 
-    def generate_indonesian_database(self, size: str = "medium") -> dict:
+    def generate_indonesian_database(self, size: str = "medium", retry_count: int = 3) -> dict:
         """Generate database Akinator dengan niche Indonesia
         
         size: "small" (30-50), "medium" (100-200), "large" (300-500), "xlarge" (500-1000+)
+        retry_count: berapa kali retry kalau error
         """
         print("\n🤖 Generating database Indonesia dengan AI...")
         print(f"📊 Size: {size.upper()}")
+        print(f"🔄 Retry count: {retry_count}")
         print("⏳ Ini mungkin memakan waktu beberapa menit...\n")
         
         # Customize prompt based on size
@@ -156,64 +158,99 @@ Start with {{ and end with }}
 Valid JSON format!
 """
 
-        try:
-            response = requests.post(
-                self.api_endpoint,
-                json={
-                    "model": self.model,
-                    "prompt": prompt,
-                    "stream": False,
-                    "temperature": 0.3,  # Lower temp untuk JSON lebih valid
-                },
-                timeout=300  # Timeout 5 menit
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                response_text = result.get('response', '')
+        # Try multiple times dengan backoff
+        for attempt in range(1, retry_count + 1):
+            try:
+                print(f"[Attempt {attempt}/{retry_count}] Sending request to Ollama...")
                 
-                # Extract JSON - find first { and parse until first complete JSON object
-                first_brace = response_text.find('{')
+                response = requests.post(
+                    self.api_endpoint,
+                    json={
+                        "model": self.model,
+                        "prompt": prompt,
+                        "stream": False,
+                        "temperature": 0.3,  # Lower temp untuk JSON lebih valid
+                    },
+                    timeout=300  # Timeout 5 menit
+                )
                 
-                if first_brace != -1:
-                    json_str_partial = response_text[first_brace:]
-                    try:
-                        # Use raw_decode to extract exactly one complete JSON object
-                        database, _ = json.JSONDecoder().raw_decode(json_str_partial)
-                        print("✅ Database berhasil di-generate!")
-                        return database
-                    except json.JSONDecodeError as e:
-                        print(f"⚠️  Error parsing JSON dari AI: {e}")
-                        print("📝 Raw response (first 500 chars):")
-                        print(response_text[:500])
-                        print(f"\n🔧 Trying to fix JSON by truncating at error...")
-                        
-                        # Try to fix by truncating at error position
-                        fixed_json = self._try_fix_json(json_str_partial, e.pos)
-                        if fixed_json:
-                            try:
-                                database, _ = json.JSONDecoder().raw_decode(fixed_json)
-                                print("✅ Fixed JSON berhasil di-parse!")
-                                return database
-                            except Exception as fix_error:
-                                print(f"❌ Fixed JSON juga error: {fix_error}")
-                        
-                        return None
+                if response.status_code == 200:
+                    result = response.json()
+                    response_text = result.get('response', '')
+                    
+                    # Extract JSON - find first { and parse until first complete JSON object
+                    first_brace = response_text.find('{')
+                    
+                    if first_brace != -1:
+                        json_str_partial = response_text[first_brace:]
+                        try:
+                            # Use raw_decode to extract exactly one complete JSON object
+                            database, _ = json.JSONDecoder().raw_decode(json_str_partial)
+                            print("✅ Database berhasil di-generate!")
+                            return database
+                        except json.JSONDecodeError as e:
+                            print(f"⚠️  JSON parse error (attempt {attempt}): {e}")
+                            print("📝 Raw response (first 300 chars):")
+                            print(response_text[:300])
+                            
+                            # Try to fix by truncating at error position
+                            fixed_json = self._try_fix_json(json_str_partial, e.pos)
+                            if fixed_json:
+                                try:
+                                    database, _ = json.JSONDecoder().raw_decode(fixed_json)
+                                    print("✅ Fixed JSON berhasil di-parse!")
+                                    return database
+                                except Exception as fix_error:
+                                    print(f"❌ Fixed JSON juga error: {fix_error}")
+                                    if attempt < retry_count:
+                                        wait_time = 2 ** attempt  # Exponential backoff
+                                        print(f"⏳ Retry dalam {wait_time} detik...")
+                                        import time
+                                        time.sleep(wait_time)
+                                        continue
+                            
+                            if attempt < retry_count:
+                                wait_time = 2 ** attempt
+                                print(f"⏳ Retry dalam {wait_time} detik...")
+                                import time
+                                time.sleep(wait_time)
+                                continue
+                    else:
+                        print(f"⚠️  Tidak bisa find '{{' dalam response (attempt {attempt})")
+                        if attempt < retry_count:
+                            wait_time = 2 ** attempt
+                            print(f"⏳ Retry dalam {wait_time} detik...")
+                            import time
+                            time.sleep(wait_time)
+                            continue
                 else:
-                    print("⚠️  Tidak bisa find '{' dalam response")
-                    print("📝 Raw response:")
-                    print(response_text[:500])
-                    return None
-            else:
-                print(f"❌ Error dari Ollama: {response.status_code}")
-                return None
-                
-        except requests.exceptions.Timeout:
-            print("❌ Timeout - AI memakan waktu terlalu lama")
-            return None
-        except Exception as e:
-            print(f"❌ Error generating database: {e}")
-            return None
+                    print(f"❌ Error dari Ollama: {response.status_code} (attempt {attempt})")
+                    if attempt < retry_count:
+                        wait_time = 2 ** attempt
+                        print(f"⏳ Retry dalam {wait_time} detik...")
+                        import time
+                        time.sleep(wait_time)
+                        continue
+                        
+            except requests.exceptions.Timeout:
+                print(f"❌ Timeout - AI memakan waktu terlalu lama (attempt {attempt})")
+                if attempt < retry_count:
+                    wait_time = 2 ** attempt
+                    print(f"⏳ Retry dalam {wait_time} detik...")
+                    import time
+                    time.sleep(wait_time)
+                    continue
+            except Exception as e:
+                print(f"❌ Error: {e} (attempt {attempt})")
+                if attempt < retry_count:
+                    wait_time = 2 ** attempt
+                    print(f"⏳ Retry dalam {wait_time} detik...")
+                    import time
+                    time.sleep(wait_time)
+                    continue
+        
+        print(f"\n❌ Failed after {retry_count} attempts!")
+        return None
 
 
 # ============================================================================
