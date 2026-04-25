@@ -1,0 +1,180 @@
+{
+  "type": "question",
+  "question": "Apakah yang Anda pikirkan itu berhubungan dengan konsumsi (dapat dimakan)?",
+  "yes": {
+    "type": "question",
+    "question": "Apakah makanan tersebut berasal dari hasil rebusan atau digoreng dengan bumbu kental?",
+    "yes": {
+      "type": "question",
+      "question": "Apakah rasanya sangat pedas atau didominasi rasa cabai?",
+      "yes": {
+        "type": "guess",
+        "guess": "Sambal Matah"
+      },
+      "no": {
+        "type": "guess",
+        "guess": "Rendang"
+      }
+    },
+    "no": {
+      "type": "question",
+      "question": "Apakah ia makanan ringan atau jajan pasar?",
+      "yes": {
+        "type": "question",
+        "question": "Apakah ia terbuat dari ketan dan berwarna hijau?",
+        "yes": {
+          "type": "guess",
+          "guess": "Klepon"
+        },
+        "no": {
+          "type": "guess",
+          "guess": "Kue Lumpur"
+        }
+      },
+      "no": {
+        "type": "guess",
+        "guess": "Soto Ayam"
+      }
+    }
+  },
+  "no": {
+    "type": "question",
+    "question": "Apakah yang Anda pikirkan itu adalah makhluk hidup (Hewan atau Manusia)?",
+    "yes": {
+      "type": "question",
+      "question": "Apakah makhluk hidup ini adalah hewan?",
+      "yes": {
+        "type": "question",
+        "question": "Apakah ia terkenal karena warna yang sangat mencolok (misalnya bulu atau kulit)?",
+        "yes": {
+          "type": "question",
+          "question": "Apakah ia burung dengan keindahan bulu yang sangat spektakuler?",
+          "yes": {
+            "type": "guess",
+            "guess": "Cendrawasih"
+          },
+          "no": {
+            "type": "guess",
+            "guess": "Komodo"
+          }
+        },
+        "no": {
+          "type": "question",
+          "question": "Apakah ia mamalia darat berbadan besar?",
+          "yes": {
+            "type": "guess",
+            "guess": "Gajah Sumatera"
+          },
+          "no": {
+            "type": "guess",
+            "guess": "Orangutan"
+          }
+        }
+      },
+      "no": {
+        "type": "question",
+        "question": "Apakah tokoh ini adalah tokoh sejarah atau pahlawan nasional?",
+        "yes": {
+          "type": "question",
+          "question": "Apakah ia pejuang kemerdekaan dari tahun 40-an?",
+          "yes": {
+            "type": "guess",
+            "guess": "Soekarno"
+          },
+          "no": {
+            "type": "guess",
+            "guess": "Mohammad Hatta"
+          }
+        },
+        "no": {
+          "type": "question",
+          "question": "Apakah ia seorang artis modern atau penyanyi terkenal?",
+          "yes": {
+            "type": "guess",
+            "guess": "Raisa"
+          },
+          "no": {
+            "type": "guess",
+            "guess": "Aktris/Aktor Indonesia"
+          }
+        }
+      }
+    },
+    "no": {
+      "type": "question",
+      "question": "Apakah yang Anda pikirkan itu adalah tempat atau benda budaya (Landmark, Benda, atau Tradisi)?",
+      "yes": {
+        "type": "question",
+        "question": "Apakah tempat/benda ini berasal dari masa Hindu-Buddha?",
+        "yes": {
+          "type": "question",
+          "question": "Apakah strukturnya berupa candi Buddha yang terkenal di Jawa Tengah?",
+          "yes": {
+            "type": "guess",
+            "guess": "Candi Borobudur"
+          },
+          "no": {
+            "type": "guess",
+            "guess": "Candi Prambanan"
+          }
+        },
+        "no": {
+          "type": "question",
+          "question": "Apakah ini identitas atau pakaian adat?",
+          "yes": {
+            "type": "question",
+            "question": "Apakah ia kain yang dicanting dengan motif khas?",
+            "yes": {
+              "type": "guess",
+              "guess": "Batik"
+            },
+            "no": {
+              "type": "guess",
+              "guess": "Tenun Ikat"
+            }
+          },
+          "no": {
+            "type": "guess",
+            "guess": "Ulos"
+          }
+        }
+      },
+      "no": {
+        "type": "question",
+        "question": "Apakah ia merujuk pada sebuah daerah atau lokasi wisata alam?",
+        "yes": {
+          "type": "question",
+          "question": "Apakah lokasi ini terkenal dengan keindahan bawah lautnya?",
+          "yes": {
+            "type": "guess",
+            "guess": "Raja Ampat"
+          },
+          "no": {
+            "type": "guess",
+            "guess": "Danau Toba"
+          }
+        },
+        "no": {
+          "type": "question",
+          "question": "Apakah itu seni pertunjukan atau alat musik tradisional?",
+          "yes": {
+            "type": "question",
+            "question": "Apakah ia berupa boneka bayangan yang dipentaskan?",
+            "yes": {
+              "type": "guess",
+              "guess": "Wayang Kulit"
+            },
+            "no": {
+              "type": "guess",
+              "guess": "Gamelan"
+            }
+          },
+          "no": {
+            "type": "guess",
+            "guess": "Angklung"
+          }
+        }
+      }
+    }
+  }
+}

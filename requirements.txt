@@ -1,0 +1,6 @@
+# Core requirements
+requests>=2.25.0
+
+# Optional: untuk development
+# pytest>=6.0.0
+# black>=21.0.0
